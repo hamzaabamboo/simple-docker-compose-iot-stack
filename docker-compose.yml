@@ -1,0 +1,46 @@
+version: "3"
+services:
+  broker:
+    image: eclipse-mosquitto
+    volumes:
+      - "./mosquitto:/mosquitto"
+    networks:
+      - localnet
+    ports:
+      - "1883:1883"
+  node-red:
+    depends_on:
+      - broker
+    image: nodered/node-red-docker
+    volumes:
+      - "./node-red:/data"
+      - "./keys:/key"
+    user: "0"
+    networks:
+      - localnet
+    ports:
+      - "1880:1880"
+  influxdb:
+    image: influxdb:alpine
+    networks:
+      - localnet
+    ports:
+      - '8086:8086'
+    volumes:
+      - "./influx:/var/lib/influxdb"
+    environment:
+      - INFLUXDB_DB=nred
+      - INFLUX_ADMIN_USER=admin
+      - INFLUX_ADMIN_PASSWORD=superdifficultpassword
+  chronograf:
+     image: chronograf:alpine
+     depends_on:
+      - influxdb
+     networks:
+      - localnet
+     ports:
+      - '8087:8888'
+     volumes:
+      - './chronograf:/var/lib/chronograf'
+networks:
+   localnet:
